@@ -1,0 +1,106 @@
+from copy import deepcopy
+
+
+def count_type(map_data, map_type):
+    count = 0
+    for row in map_data:  # for each row in map_data
+        for entry in row:  # for each column in row of map_data
+            if entry in map_type:  # checks if entity at Aij is the same as the map_type
+                count += 1  # adds 1 to total count
+    return count  # returns total
+
+
+def classify_map(map_data):
+    total_cell = len(map_data) * len(map_data[0])  # multiples number of rows by columns to get total
+    R = count_type(map_data, 'R')  # gets the amount of R map type on the map, same fo the others down below
+    A = count_type(map_data, 'A')
+    U = count_type(map_data, 'U')
+    W = count_type(map_data, 'W')
+    C = count_type(map_data, 'C')
+
+    if (R / total_cell) > 0.5:  # Returns statement if percentage of R in total is >50%
+        return 'Suburban'
+    if (A / total_cell) > 0.5:  # Returns statement if percentage of A in total is >50%
+        return 'Farmland'
+    if (U + W) / total_cell > 0.5:  # Returns statement if percentage of U + W in total is >50%
+        return 'Conservation'
+    if C / total_cell > 0.5 and (
+            0.2 >= (U + A) / total_cell >= 0.1):  # Returns statement if percentage of C in total is >50%
+        return 'City'  # and if percentage of U+A is between 10-20%
+    else:
+        return 'Mixed'  # if none of the above, returns mixed
+
+
+def isolate_type(map_data, map_type):
+    new_map = deepcopy(map_data)  # creates copy of new_map to prevent changing data of map_data
+    for rval, row in enumerate(map_data):  # gets the index number and # of rows for each row in map_data
+        for cval, column in enumerate(row):  # gets the index number and # of columns for each column in map_data
+            if column != map_type:  # if the entry in Aij is not the same as given map_type, changes it to a space
+                new_map[rval][cval] = ' '
+    return new_map  # returns the isolated map
+
+
+def commercially_buildable(map_data, i, j):
+    row_num = len(map_data)  # counts total num of rows
+    col_num = len(map_data[0])  # counts total num of columns
+
+    # checks if given i j is at the boundaries by checking if i or j is equal to 0 (the far left of the grid)
+    # and if i and j is equal to the total number of row/column -1, since indexs starts at 0
+    if i == row_num - 1 or i == 0 or j == 0 or j == col_num - 1:
+        print("Can't build on edges")
+        return False
+
+    # checks if given i j values is not equal to U, returns false is not equal to U
+    if map_data[i][j] != 'U':
+        print("Can't build on not U")
+        return False
+
+    # checks if entry in adjacent squares
+    for entry in range(-1,2,2):
+        #print("this is entry: ", entry, "this is data: ", map_data[i + entry][j], map_data[i][j + entry])
+        if map_data[i + entry][j] in 'AR' or map_data[i][j + entry] in 'AR':
+            print("Can't build near R or A")
+            return False
+    # returns true when all conditions are meet
+    print("Can Build!")
+    return True
+
+
+MAP = [['A','A','A','A','U','U','U','U'],
+       ['A','A','A','A','U','R','R','R'],
+       ['W','W','W','W','T','T','T','T'],
+       ['W','W','W','W','T','R','R','R'],
+       ['C','C','U','U','T','R','U','U'],
+       ['T','T','T','T','T','T','U','U'],
+       ['U','U','U','U','T','R','U','U']]
+
+MAP2 = [['C', 'C', 'C', 'C', 'R', 'T', 'C'],
+        ['T', 'T', 'T', 'T', 'T', 'C', 'C'],
+        ['C', 'C', 'W', 'C', 'C', 'T', 'C'],
+        ['C', 'C', 'C', 'W', 'U', 'T', 'C'],
+        ['C', 'C', 'C', 'U', 'U', 'T', 'C'],
+        ['C', 'C', 'C', 'C', 'C', 'U', 'C'],
+        ['C', 'C', 'C', 'T', 'U', 'U', 'C'],
+        ['C', 'T', 'C', 'T', 'U', 'A', 'C']]
+
+# count_type() and classify_map() functions
+print("The number of U spaces in MAP =", count_type(MAP, 'U'))
+print("The number of T spaces in MAP2 =", count_type(MAP2, 'T'))
+print("MAP Type =", classify_map(MAP))
+print("MAP2 Type =", classify_map(MAP2))
+
+# isolate_type() function
+print("-----------------")
+print("Isolated MAP: U")
+MA = isolate_type(MAP, 'U')
+for row in MA:
+    print(row)
+print("-----------------")
+print("Isolated MAP2: T")
+MB = isolate_type(MAP2, 'T')
+for row in MB:
+    print(row)
+print("-----------------")
+# commercially_buildable() function
+print("Is MAP commercially buildable at (A,2):", commercially_buildable(MAP,'A', 2))
+print("Is MAP2 commercially buildable at (3,4):", commercially_buildable(MAP2, 3, 4))
